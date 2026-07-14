@@ -11,11 +11,17 @@ import '../lead_screen.dart';
 import '../agent_profile_screen.dart';
 import '../property_for_list.dart';
 import 'app_routes.dart';
+import '../UploadPropertyPhotoScreen.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(
       RouteSettings settings) {
     switch (settings.name) {
+      case '/upload-property-photo':
+  final int propertyId = settings.arguments as int;
+  return MaterialPageRoute(
+    builder: (_) => UploadPropertyPhotoScreen(propertyId: propertyId),
+  );
       case AppRoutes.splash:
         return MaterialPageRoute(
           builder: (_) => const SplashScreen(),
@@ -36,7 +42,7 @@ class RouteGenerator {
           builder: (_) => const DashboardScreen(),
         );
 
-      case AppRoutes.propertyList:
+      case AppRoutes.propertylist:
         return MaterialPageRoute(
           builder: (_) =>
               const PropertyListScreen(),
@@ -82,27 +88,7 @@ class RouteGenerator {
           ),
         );
     
-        case AppRoutes.propertyDetails:
-  final property =
-      settings.arguments as PropertyForList?;
-
-  if (property == null) {
-    return MaterialPageRoute(
-      builder: (_) => const Scaffold(
-        body: Center(
-          child: Text('No Property Found'),
-        ),
-      ),
-    );
-  }
-
-  return MaterialPageRoute(
-    builder: (_) => PropertyDetailsScreen(
-      property: property,
-    ),
-  );
-
-default:
+        default:
   return MaterialPageRoute(
     builder: (_) => Scaffold(
       body: Center(

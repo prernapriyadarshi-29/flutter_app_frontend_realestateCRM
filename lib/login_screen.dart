@@ -174,33 +174,28 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                     child: ElevatedButton(
-                     onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-    final success =
-        await Provider.of<AuthService>(
-      context,
-      listen: false,
-    ).login(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
-    );
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          bool success = await Provider.of<AuthService>(
+                            context,
+                            listen: false,
+                          ).login(_emailController.text, _passwordController.text);
 
-    if (success) {
-      Navigator.pushReplacementNamed(
-        context,
-        '/dashboard',
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Invalid Email or Password',
-          ),
-        ),
-      );
-    }
-  }
-},
+                          if (success) {
+                            // Navigate to dashboard
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/dashboard',
+                              (route) => false,
+                            );
+                          } else {
+                            // Show error message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Login failed. Check your email and password.')),
+                            );
+                          }
+                        }
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: const Color(0xFF1A2A6C),

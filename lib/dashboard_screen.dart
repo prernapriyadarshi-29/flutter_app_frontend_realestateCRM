@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'auth_service.dart';
 import 'services/storage_service.dart';
 import 'theme provider.dart';
+import 'services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -56,11 +57,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 String userName = "";
 String userEmail = "";
+int totalProperties = 0;
+  int totalCustomers = 0;
+  int totalLeads = 0;
+  int todayFollowups = 0;
+  bool isLoading = true;
 
 @override
 void initState() {
   super.initState();
   _loadUser();
+  _loadDashboard();
 }
 
 Future<void> _loadUser() async {
@@ -75,11 +82,29 @@ Future<void> _loadUser() async {
   }
 }
 
+Future<void> _loadDashboard() async {
+  try {
+    final response = await ApiService.getDashboard();
+
+    if (response['status'] == true) {
+      final data = response['data'] as Map<String, dynamic>;
+      
+      setState(() {
+        totalProperties = data['total_properties'] ?? 0;
+        totalCustomers = data['total_customers'] ?? 0;
+        totalLeads = data['total_leads'] ?? 0;
+        todayFollowups = data['today_followups'] ?? 0;
+        isLoading = false;
+      });
+    }
+  } catch (e) {
+    print('Error loading dashboard: $e');
+    setState(() => isLoading = false);
+  }
+}
+
+@override
   Widget build(BuildContext context) {
-    int totalProperties = 36;
-    int totalCustomers = 52;
-    int totalLeads = 35;
-    int availableProperties = 22;
 
     return Scaffold(
       drawer: Drawer(
@@ -103,9 +128,9 @@ Future<void> _loadUser() async {
         leading: const Icon(Icons.home),
         title: const Text('Properties'),
         onTap: () {
-          Navigator.pushReplacementNamed(
+          Navigator.pushNamed(
             context,
-            AppRoutes.propertyList,
+            AppRoutes.propertylist,
           );
         },
       ),
@@ -163,15 +188,15 @@ bottomNavigationBar: BottomNavigationBar(
     if (index == 0) {
     // Already on Dashboard
      } else if (index == 1) {
-      Navigator.pushReplacementNamed(
-        context,AppRoutes.propertyList,
+      Navigator.pushNamed(
+        context,AppRoutes.propertylist,
         );
         } else if (index == 2) {
-          Navigator.pushReplacementNamed(
+          Navigator.pushNamed(
             context,AppRoutes.leads,
             );
             } else if (index == 3) {
-              Navigator.pushReplacementNamed(
+              Navigator.pushNamed(
                 context,AppRoutes.profile,
                 );
                 }
@@ -204,7 +229,9 @@ bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+    ? const Center(child: CircularProgressIndicator())
+    : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment:
@@ -217,7 +244,6 @@ bottomNavigationBar: BottomNavigationBar(
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             
 
             const SizedBox(height: 8),
@@ -260,11 +286,11 @@ bottomNavigationBar: BottomNavigationBar(
                   Colors.green,
                 ),
                 DashboardScreen._buildCard(
-                  'Available',
-                  availableProperties.toString(),
-                  Icons.check_circle,
-                  Colors.purple,
-                ),
+                   "Today's Followups",
+                   todayFollowups.toString(),
+                   Icons.calendar_today,
+                   Colors.red,
+                   ),
               ],
             ),
 

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'property_for_list.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import '../services/api_service.dart';
 
 class PropertyAddFormScreen extends StatefulWidget {
   final PropertyForList? property;
@@ -36,15 +39,19 @@ class _PropertyAddFormScreenState
   final _descriptionFocus = FocusNode();
 
   // Dropdown value
-  String _selectedPropertyType = 'Flat';
+  String? _selectedPropertyType ;
 
   // Switch value
   bool _isAvailable = true;
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
   @override
 void initState() {
   super.initState();
 
   if (widget.property != null) {
+
+    _selectedPropertyType = widget.property!.propertyType;
     _titleController.text =
         widget.property!.title;
 
@@ -67,6 +74,19 @@ void initState() {
 
     _isAvailable =
         widget.property!.isAvailable;
+  }
+}
+
+Future<void> _pickImage() async {
+  final XFile? image = await _picker.pickImage(
+    source: ImageSource.gallery,
+    imageQuality: 80,
+  );
+
+  if (image != null) {
+    setState(() {
+      _selectedImage = File(image.path);
+    });
   }
 }
 
@@ -100,11 +120,12 @@ void _saveProperty() {
 
   if (_formKey.currentState!.validate()) {
     final property = PropertyForList(
+      id : widget.property?.id ?? 0,
       title: _titleController.text.trim(),
       price: int.parse(_priceController.text.replaceAll(',', '').trim()),
       city: _cityController.text.trim(),
       bedrooms: int.parse(_bedroomsController.text.trim()),
-      propertyType: _selectedPropertyType,
+      propertyType: _selectedPropertyType ?? 'Apartment',
       description: _descriptionController.text.trim(),
       isAvailable: _isAvailable,
     );
@@ -298,8 +319,8 @@ void _saveProperty() {
                 ),
                 items: const [
                   DropdownMenuItem(
-                    value: 'Flat',
-                    child: Text('Flat'),
+                    value: 'Aparatment',
+                    child: Text('Apartment'),
                   ),
                   DropdownMenuItem(
                     value: 'House',
@@ -342,6 +363,40 @@ void _saveProperty() {
               ),
 
               const SizedBox(height: 16),
+
+              const SizedBox(height: 16),
+
+Align(
+  alignment: Alignment.centerLeft,
+  child: Text(
+    'Property Photo',
+    style: TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+),
+
+const SizedBox(height: 10),
+
+if (_selectedImage != null)
+  ClipRRect(
+    borderRadius: BorderRadius.circular(8),
+    child: Image.file(
+      _selectedImage!,
+      height: 180,
+      width: double.infinity,
+      fit: BoxFit.cover,
+    ),
+  ),
+
+const SizedBox(height: 10),
+
+OutlinedButton.icon(
+  onPressed: _pickImage,
+  icon: const Icon(Icons.photo),
+  label: const Text('Choose Image'),
+),
 
               // Status Switch
               SwitchListTile(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'services/storage_service.dart';
+import 'services/api_service.dart';
 
 class AuthService extends ChangeNotifier {
   bool _isLoggedIn = false;
@@ -15,55 +17,74 @@ class AuthService extends ChangeNotifier {
 
   // ---------------- REGISTER ----------------
 
-  Future<bool> register(
-    String email,
-    String password,
-    String name,
-  ) async {
-    final users = await StorageService.getUsers();
+  Future<bool> register(String name, String email, String password) async {
+  try {
+    final response = await ApiService.register(
+      name: name,
+      email: email,
+      password: password,
+      passwordConfirmation: password,
+      role: 'agent',
+    );
 
-    // Check if email already exists
-    for (var user in users) {
-      if (user['email'] == email) {
-        return false;
-      }
+    if (response['status'] == true) {
+      // Store token from API
+      String token = response['token'];
+      ApiService.setToken(token);
+      
+      // Also save to SharedPreferences as backup
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', token);
+      //clear old user data
+      await prefs.remove('currentUser');
+      await prefs.remove('currentUserData');
+      //save new email
+      await prefs.setString('userEmail', email);
+      
+      notifyListeners();
+      return true;
+    } else {
+      return false;
     }
-
-    users.add({
-  'name': name,
-  'email': email,
-  'password': password,
-});
-
-    await StorageService.saveUsers(users);
-
-    return true;
+  } catch (e) {
+    print('Register error: $e');
+    return false;
   }
+}
 
   // ---------------- LOGIN ----------------
 
-  Future<bool> login(
-    String email,
-    String password,
-  ) async {
-    final users = await StorageService.getUsers();
+  Future<bool> login(String email, String password) async {
+  try {
+    print('🔐 Attempting login with: $email');
+    
+    final response = await ApiService.login(
+      email: email,
+      password: password,
+    );
 
-    for (var user in users) {
-      if (user['email'] == email &&
-          user['password'] == password) {
-        _isLoggedIn = true;
+    print('📨 API Response: $response');
 
-        await StorageService.saveCurrentUser(email);
-        await StorageService.saveCurrentUserData(user);
-
-        notifyListeners();
-
-        return true;
-      }
+    if (response['status'] == true) {
+      String token = response['token'];
+      print('✅ Login successful! Token: $token');
+      
+      ApiService.setToken(token);
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', token);
+      
+      notifyListeners();
+      return true;
+    } else {
+      print('❌ Login failed: ${response['message']}');
+      return false;
     }
-
+  } catch (e) {
+    print('💥 Login error: $e');
     return false;
   }
+}
 
   // ---------------- AUTO LOGIN ----------------
 
@@ -79,10 +100,34 @@ class AuthService extends ChangeNotifier {
   // ---------------- LOGOUT ----------------
 
   Future<void> logout() async {
-    _isLoggedIn = false;
+    try {
+      await ApiService.logout();
+    } catch(e) {
+      print('APIlogout error: $e');
+    }
+    //clear token from ApiService
+      ApiService.clearToken();
 
-    await StorageService.logout();
+      //clear from sharedpreferences
+      final prefs =await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('userEmail');
+      await prefs.remove('currentUser');
+      await prefs.remove('currentUserData');
 
-    notifyListeners();
+      notifyListeners();
+    
   }
+// Load token from storage on app start
+Future<void> loadTokenFromStorage() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('auth_token');
+    if (token != null) {
+      ApiService.setToken(token);
+    }
+  } catch (e) {
+    print('Load token error: $e');
+  }
+}
 }

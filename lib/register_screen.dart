@@ -334,36 +334,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          final success =await Provider.of<AuthService>(
+                          bool success = await Provider.of<AuthService>(
                             context,
                             listen: false,
                             ).register(
-                            _nameController.text.trim(),
-                             _emailController.text.trim(),
-                             _passwordController.text.trim()
-                             );
-                             
-                            if (success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Registration Successful. Please Login.',),
-                                  ),
+                              _nameController.text,
+                              _emailController.text,
+                              _passwordController.text,
+                              );
+                              
+                              if (success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Registration successful!')),
                                   );
-                                  
-                                  Navigator.pop(context);
-                                  } 
-                        
-    else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Email already registered.',
-          ),
-        ),
-      );
-    }
-  }
-},
+                                  Future.delayed(Duration(seconds: 1), () {
+                                    Navigator.pushNamedAndRemoveUntil(
+                                      context,
+                                      '/dashboard',
+                                      (route) => false,
+                                      );
+                                      });
+                                      } else {
+                                         ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Email already registered. Please login.')),
+                                          );
+                                          } 
+                                          }
+                                          },
                       style:
                           ElevatedButton.styleFrom(
                         backgroundColor:

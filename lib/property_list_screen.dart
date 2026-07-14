@@ -1,316 +1,13 @@
-/*import 'package:flutter/material.dart';
-import 'property_for_list.dart';
-import 'property_add_form_screen.dart';
 
-class PropertyListScreen extends StatefulWidget {
-  const PropertyListScreen({super.key});
-
-  @override
-  State<PropertyListScreen> createState() =>
-      _PropertyListScreenState();
-}
-
-class _PropertyListScreenState
-    extends State<PropertyListScreen> {
-  final List<PropertyForList> properties = [];
-
-  Future<void> _addProperty() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            const PropertyAddFormScreen(),
-      ),
-    );
-
-    if (result != null &&
-        result is PropertyForList) {
-      setState(() {
-        properties.add(result);
-      });
-    }
-  }
-
-  Future<void> _editProperty(
-      int index) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            PropertyAddFormScreen(
-          property: properties[index],
-        ),
-      ),
-    );
-
-    if (result != null &&
-        result is PropertyForList) {
-      setState(() {
-        properties[index] = result;
-      });
-    }
-  }
-
-  Future<void> _deleteProperty(
-      int index) async {
-    final shouldDelete =
-        await showDialog<bool>(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                  title:
-                      const Text('Delete Property'),
-                  content: const Text(
-                    'Are you sure you want to delete this property?',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(
-                            context, false);
-                      },
-                      child:
-                          const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(
-                            context, true);
-                      },
-                      child:
-                          const Text('Delete'),
-                    ),
-                  ],
-                );
-              },
-            ) ??
-            false;
-
-    if (shouldDelete) {
-      setState(() {
-        properties.removeAt(index);
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-       elevation: 0,
-       backgroundColor: Colors.indigo,
-       title: const Text(
-         "My Properties",
-           style: TextStyle(
-         fontWeight: FontWeight.bold,
-        color: Colors.white,
-      ),
-    ),
-    centerTitle: true,
-),
-      body: properties.isEmpty
-    ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(25),
-              decoration: BoxDecoration(
-                color: Colors.indigo.shade50,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.home_work_outlined,
-                size: 90,
-                color: Colors.indigo,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            const Text(
-              "No Properties Added",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            const Text(
-              "Tap the + button to add your first property.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      )
-    : ListView.builder(
-        padding: const EdgeInsets.only(
-          top: 10,
-          bottom: 90,
-        ),
-        itemCount: properties.length,
-        itemBuilder: (context, index) {
-          final p = properties[index];
-
-          return Card(
-            elevation: 5,
-            margin: const EdgeInsets.symmetric(
-              horizontal: 15,
-              vertical: 8,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(20),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(15),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor:
-                            Colors.indigo.shade100,
-                        child: const Icon(
-                          Icons.home,
-                          color: Colors.indigo,
-                          size: 30,
-                        ),
-                      ),
-
-                      const SizedBox(width: 15),
-
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              p.title,
-                              style:
-                                  const TextStyle(
-                                fontSize: 18,
-                                fontWeight:
-                                    FontWeight.bold,
-                              ),
-                            ),
-
-                            const SizedBox(
-                                height: 5),
-
-                            Text(
-                              p.city,
-                              style:
-                                  const TextStyle(
-                                color: Colors.grey,
-                              ),
-                            ),
-
-                            const SizedBox(
-                                height: 5),
-
-                            Text(
-                              "₹${p.price}",
-                              style:
-                                  const TextStyle(
-                                fontSize: 16,
-                                fontWeight:
-                                    FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      Container(
-                        padding:
-                            const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration:
-                            BoxDecoration(
-                          color: p.isAvailable
-                              ? Colors
-                                  .green.shade100
-                              : Colors.red.shade100,
-                          borderRadius:
-                              BorderRadius.circular(
-                                  20),
-                        ),
-                        child: Text(
-                          p.isAvailable
-                              ? "Available"
-                              : "Sold",
-                          style: TextStyle(
-                            color: p.isAvailable
-                                ? Colors.green
-                                : Colors.red,
-                            fontWeight:
-                                FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.edit,
-                          color: Colors.blue,
-                        ),
-                        onPressed: () {
-                          _editProperty(index);
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete,
-                          color: Colors.red,
-                        ),
-                        onPressed: () {
-                          _deleteProperty(index);
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-
-floatingActionButton:
-    FloatingActionButton.extended(
-  backgroundColor: Colors.indigo,
-  onPressed: _addProperty,
-  icon: const Icon(Icons.add),
-  label: const Text("Add Property"),
-),
-    );
-  }
-    }*/
-    import 'package:flutter/material.dart';
+   /* import 'package:flutter/material.dart';
+import 'package:testapp1/services/api_service.dart';
 import 'property_for_list.dart';
 import 'property_add_form_screen.dart';
 import 'routes/app_routes.dart';
 import 'services/storage_service.dart';
 import 'package:provider/provider.dart';
 import 'auth_service.dart';
+import 'services/api_service.dart';
 
 class PropertyListScreen extends StatefulWidget {
   const PropertyListScreen({super.key});
@@ -332,19 +29,42 @@ void initState() {
 }
 
 Future<void> _loadProperties() async {
+  try {
+    final response = await ApiService.index();
 
-final email = await StorageService.getCurrentUser();
+    if (response['status'] == true) {
+      // Extract properties from paginated response
+      final dataContainer = response['data'] as Map<String, dynamic>;
+      final propertiesList = dataContainer['data'] as List<dynamic>? ?? [];
 
-final data = await StorageService.getProperties(
-  email!,
-);
-  setState(() {
-    properties.clear();
-
-    properties.addAll(
-      data.map((e) => PropertyForList.fromMap(e)).toList(),
+      setState(() {
+        properties.clear();
+        for (var item in propertiesList) {
+          final map = item as Map<String, dynamic>;
+          
+          // Convert to PropertyForList with correct field mapping
+          final property = PropertyForList(
+            id: map['id'] ?? 0,
+            title: map['title'] ?? '',
+            price: int.tryParse(map['price']?.toString() ?? '0') ?? 0,
+            city: map['city'] ?? '',
+            address: map['address'],
+            bedrooms: map['bedrooms'] ?? 0,
+            propertyType: map['type'] ?? '',  // ← Map 'type' to 'propertyType'
+            description: map['description'] ?? '',
+            isAvailable: (map['status'] ?? 0) == 1,
+            photos: map['photos'],
+          );
+          properties.add(property);
+        }
+      });
+    }
+  } catch (e) {
+    print('Error loading properties: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to load properties')),
     );
-  });
+  }
 }
 
 
@@ -361,45 +81,67 @@ await StorageService.saveProperties(
 }
 
   Future<void> _addProperty() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            const PropertyAddFormScreen(),
-      ),
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const PropertyAddFormScreen(),
+    ),
+  );
+
+  if (result != null && result is PropertyForList) {
+    // Save to Laravel API
+    final response = await ApiService.store(
+      title: result.title,
+      price: result.price,
+      city: result.city,
+      address: result.address ?? '',
+      bedrooms: result.bedrooms,
+      type: result.propertyType,
+      photo: result.photos ?? '',
+      status: result.isAvailable ? 1 : 0,
     );
 
-    if (result != null &&
-        result is PropertyForList) {
-      setState(() {
-  properties.add(result);
-});
-
-await _saveProperties();
+    if (response['status'] == true) {
+      _loadProperties();  // Reload from API
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Property added successfully!')),
+      );
     }
   }
+}
 
-  Future<void> _editProperty(
-      int index) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            PropertyAddFormScreen(
-          property: properties[index],
-        ),
+  Future<void> _editProperty(int index) async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => PropertyAddFormScreen(
+        property: properties[index],
       ),
+    ),
+  );
+
+  if (result != null && result is PropertyForList) {
+    // Update to Laravel API
+    final response = await ApiService.update(
+      properties[index].id,
+      title: result.title,
+      price: result.price,
+      city: result.city,
+      address: result.address ?? '',
+      bedrooms: result.bedrooms,
+      type: result.propertyType,
+      photo: result.photos ?? '',
+      status: result.isAvailable ? 1 : 0,
     );
 
-    if (result != null &&
-        result is PropertyForList) {
-      setState(() {
-  properties[index] = result;
-});
-
-await _saveProperties();
+    if (response['status'] == true) {
+      _loadProperties();  // Reload from API
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Property updated successfully!')),
+      );
     }
   }
+}
 
   Future<void> _deleteProperty(
       int index) async {
@@ -437,11 +179,308 @@ await _saveProperties();
             false;
 
     if (shouldDelete) {
-      setState(() {
-  properties.removeAt(index);
-});
+  // Delete from Laravel API
+  final response = await ApiService.destroy(properties[index].id);
 
-await _saveProperties();
+  if (response['status'] == true) {
+    _loadProperties();  // Reload from API
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Property deleted successfully!')),
+    );
+  }
+}
+      @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.indigo,
+        title: const Text(
+          "My Properties",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: properties.isEmpty
+          ? Center(
+              child: Text('No properties yet'),
+            )
+          : ListView.builder(
+              itemCount: properties.length,
+              itemBuilder: (context, index) {
+                final p = properties[index];
+                return ListTile(
+                  title: Text(p.title),
+                  subtitle: Text(p.city),
+                  onTap: () {},
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addProperty,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+       @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.indigo,
+        title: const Text(
+          "My Properties",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: properties.isEmpty
+          ? Center(
+              child: Text('No properties yet'),
+            )
+          : ListView.builder(
+              itemCount: properties.length,
+              itemBuilder: (context, index) {
+                final p = properties[index];
+                return ListTile(
+                  title: Text(p.title),
+                  subtitle: Text(p.city),
+                  onTap: () {},
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addProperty,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+    
+      @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.indigo,
+        title: const Text(
+          "My Properties",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: properties.isEmpty
+          ? Center(
+              child: Text('No properties yet'),
+            )
+          : ListView.builder(
+              itemCount: properties.length,
+              itemBuilder: (context, index) {
+                final p = properties[index];
+                return ListTile(
+                  title: Text(p.title),
+                  subtitle: Text(p.city),
+                  onTap: () {},
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addProperty,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+    }*/
+    import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../property_for_list.dart';
+import '../property_add_form_screen.dart';
+import '../services/api_service.dart';
+import '../auth_service.dart';
+
+class PropertyListScreen extends StatefulWidget {
+  const PropertyListScreen({super.key});
+
+  @override
+  State<PropertyListScreen> createState() => _PropertyListScreenState();
+}
+
+class _PropertyListScreenState extends State<PropertyListScreen> {
+  final List<PropertyForList> properties = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+
+  @override
+void initState() {
+  super.initState();
+  _loadPropertiesFromAPI();
+}
+
+Future<void> _loadPropertiesFromAPI() async {
+  try {
+    final data = await ApiService.getProperties();
+    setState(() {
+  properties.clear();
+  properties.addAll(data);
+});
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
+  }
+}
+
+  void _filterPropertiesLocally(String query) {
+  // Call API but also filter locally for instant display
+  _loadProperties(search: query).then((_) {
+    // After API returns, properties are already filtered by backend
+    // But we can do additional local filtering if needed
+    setState(() {
+      if (query.isEmpty) {
+        // Show all
+      } else {
+        // Backend already filtered, but we can add extra filter here
+        // This ensures multiple words match
+      }
+    });
+  });
+}
+
+  Future<void> _loadProperties({String search = ''}) async {
+  try {
+    final response = await ApiService.index(search: search);
+
+      if (response['status'] == true) {
+        final dataContainer = response['data'] as Map<String, dynamic>;
+        final propertiesList = dataContainer['data'] as List<dynamic>? ?? [];
+
+        setState(() {
+          properties.clear();
+          for (var item in propertiesList) {
+            final map = item as Map<String, dynamic>;
+            final property = PropertyForList(
+              id: map['id'] ?? 0,
+              title: map['title'] ?? '',
+              price: int.tryParse(map['price']?.toString() ?? '0') ?? 0,
+              city: map['city'] ?? '',
+              address: map['address'],
+              bedrooms: map['bedrooms'] ?? 0,
+              propertyType: map['type'] ?? '',
+              description: map['description'] ?? '',
+              isAvailable: (map['status'] ?? 0) == 1,
+              photos: map['photos'],
+            );
+            properties.add(property);
+          }
+        });
+      }
+    } catch (e) {
+      print('Error loading properties: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load properties')),
+      );
+    }
+  }
+
+  Future<void> _addProperty() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PropertyAddFormScreen(),
+      ),
+    );
+
+    if (result != null && result is PropertyForList) {
+      final response = await ApiService.store(
+        title: result.title,
+        price: result.price,
+        city: result.city,
+        address: result.address ?? '',
+        bedrooms: result.bedrooms,
+        type: result.propertyType,
+        photo: result.photos ?? '',
+        status: result.isAvailable ? 1 : 0,
+      );
+
+      if (response['status'] == true) {
+        _loadProperties();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Property added successfully!')),
+        );
+      }
+    }
+  }
+
+  Future<void> _editProperty(int index) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PropertyAddFormScreen(
+          property: properties[index],
+        ),
+      ),
+    );
+
+    if (result != null && result is PropertyForList) {
+      final response = await ApiService.update(
+        properties[index].id,
+        title: result.title,
+        price: result.price,
+        city: result.city,
+        address: result.address ?? '',
+        bedrooms: result.bedrooms,
+        type: result.propertyType,
+        photo: result.photos ?? '',
+        status: result.isAvailable ? 1 : 0,
+      );
+
+      if (response['status'] == true) {
+        _loadProperties();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Property updated successfully!')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteProperty(int index) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Property'),
+        content: const Text('Are you sure you want to delete this property?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    ) ?? false;
+
+    if (shouldDelete) {
+      final response = await ApiService.destroy(properties[index].id);
+
+      if (response['status'] == true) {
+        _loadProperties();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Property deleted successfully!')),
+        );
+      }
     }
   }
 
@@ -465,350 +504,223 @@ await _saveProperties();
         child: ListView(
           children: [
             const UserAccountsDrawerHeader(
-              accountName:
-                  Text('Rahul Sharma'),
-              accountEmail:
-                  Text('rahul@gmail.com'),
-              currentAccountPicture:
-                  CircleAvatar(
+              accountName: Text('Agent Name'),
+              accountEmail: Text('agent@email.com'),
+              currentAccountPicture: CircleAvatar(
                 child: Icon(Icons.person),
               ),
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.dashboard),
-              title:
-                  const Text('Dashboard'),
+              leading: const Icon(Icons.dashboard),
+              title: const Text('Dashboard'),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.pushNamed(context, '/dashboard');
               },
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.home),
-              title:
-                  const Text('Properties'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            const ListTile(
-              leading:
-                  Icon(Icons.people),
-              title: Text('Customers'),
-            ),
-            const ListTile(
-              leading:
-                  Icon(Icons.person_add),
-              title: Text('Leads'),
-            ),
-            const ListTile(
-              leading:
-                  Icon(Icons.settings),
-              title: Text('Settings'),
+              leading: const Icon(Icons.home),
+              title: const Text('Properties'),
+              onTap: () => Navigator.pop(context),
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.logout),
-              title:
-                  const Text('Logout'),
+              leading: const Icon(Icons.people),
+              title: const Text('Customers'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_add),
+              title: const Text('Leads'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
               onTap: () async {
-  await Provider.of<AuthService>(
-    context,
-    listen: false,
-  ).logout();
-
-  Navigator.pushNamedAndRemoveUntil(
-    context,
-    AppRoutes.login,
-    (route) => false,
-  );
-},
+                await Provider.of<AuthService>(context, listen: false)
+                    .logout();
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                  (route) => false,
+                );
+              },
             ),
           ],
         ),
       ),
 
-      body: properties.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.all(
-                            25),
-                    decoration:
-                        BoxDecoration(
-                      color: Colors
-                          .indigo.shade50,
-                      shape:
-                          BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons
-                          .home_work_outlined,
-                      size: 90,
-                      color:
-                          Colors.indigo,
-                    ),
-                  ),
-                  const SizedBox(
-                      height: 30),
-                  const Text(
-                    "No Properties Added",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(
-                      height: 10),
-                  const Text(
-                    "Tap the + button to add your first property.",
-                    textAlign:
-                        TextAlign.center,
-                    style: TextStyle(
-                      color:
-                          Colors.grey,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
+      body: Column(
+        children: [
+          // SEARCH BAR
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search properties...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                          _loadProperties();
+                        },
+                      )
+                    : null,
               ),
-            )
-          : ListView.builder(
-              padding:
-                  const EdgeInsets.only(
-                top: 10,
-                bottom: 90,
-              ),
-              itemCount:
-                  properties.length,
-              itemBuilder:
-                  (context, index) {
-                final p =
-                    properties[index];
-
-                return InkWell(
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      AppRoutes
-                          .propertyDetails,
-                      arguments: p,
-                    );
-                  },
-                  child: Card(
-                    elevation: 5,
-                    margin:
-                        const EdgeInsets
-                            .symmetric(
-                      horizontal: 15,
-                      vertical: 8,
-                    ),
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                                  20),
-                    ),
-                    child: Padding(
-                      padding:
-                          const EdgeInsets
-                              .all(15),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 28,
-                                backgroundColor:
-                                    Colors
-                                        .indigo
-                                        .shade100,
-                                child:
-                                    const Icon(
-                                  Icons.home,
-                                  color: Colors
-                                      .indigo,
-                                  size: 30,
-                                ),
-                              ),
-                              const SizedBox(
-                                  width: 15),
-                              Expanded(
-                                child:
-                                    Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment
-                                          .start,
-                                  children: [
-                                    Text(
-                                      p.title,
-                                      style:
-                                          const TextStyle(
-                                        fontSize:
-                                            18,
-                                        fontWeight:
-                                            FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                        height:
-                                            5),
-                                    Text(
-                                      p.city,
-                                      style:
-                                          const TextStyle(
-                                        color:
-                                            Colors.grey,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                        height:
-                                            5),
-                                    Text(
-                                      "₹${p.price}",
-                                      style:
-                                          const TextStyle(
-                                        fontSize:
-                                            16,
-                                        fontWeight:
-                                            FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding:
-                                    const EdgeInsets
-                                        .symmetric(
-                                  horizontal:
-                                      12,
-                                  vertical:
-                                      6,
-                                ),
-                                decoration:
-                                    BoxDecoration(
-                                  color: p
-                                          .isAvailable
-                                      ? Colors
-                                          .green
-                                          .shade100
-                                      : Colors
-                                          .red
-                                          .shade100,
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                              20),
-                                ),
-                                child: Text(
-                                  p.isAvailable
-                                      ? "Available"
-                                      : "Sold",
-                                  style:
-                                      TextStyle(
-                                    color: p
-                                            .isAvailable
-                                        ? Colors
-                                            .green
-                                        : Colors
-                                            .red,
-                                    fontWeight:
-                                        FontWeight
-                                            .bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(
-                              height: 15),
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment
-                                    .end,
-                            children: [
-                              IconButton(
-                                icon:
-                                    const Icon(
-                                  Icons.edit,
-                                  color:
-                                      Colors
-                                          .blue,
-                                ),
-                                onPressed:
-                                    () {
-                                  _editProperty(
-                                      index);
-                                },
-                              ),
-                              IconButton(
-                                icon:
-                                    const Icon(
-                                  Icons
-                                      .delete,
-                                  color:
-                                      Colors
-                                          .red,
-                                ),
-                                onPressed:
-                                    () {
-                                  _deleteProperty(
-                                      index);
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
+              onChanged: (value) {
+                setState(() => _searchQuery = value);
+                if (value.isEmpty) {
+                   _loadProperties();  // Load all if empty
+                   } else {
+    // Instant filter locally
+       _filterPropertiesLocally(value);
+       }
+       },
             ),
-
-      floatingActionButton:
-          FloatingActionButton.extended(
+          ),
+          // PROPERTIES LIST
+          Expanded(
+            child: properties.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(25),
+                          decoration: BoxDecoration(
+                            color: Colors.indigo.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.home_work_outlined,
+                            size: 90,
+                            color: Colors.indigo,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text('No properties found'),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(10),
+                    itemCount: properties.length,
+                    itemBuilder: (context, index) {
+                      final p = properties[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 28,
+                                    backgroundColor: Colors.indigo.shade100,
+                                    child: const Icon(
+                                      Icons.home,
+                                      color: Colors.indigo,
+                                      size: 30,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 15),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          p.title,
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          p.city,
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          '₹${p.price}',
+                                          style: const TextStyle(
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        color: Colors.blue,
+                                        onPressed: () => _editProperty(index),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.photo_camera),
+                                        color: Colors.green,
+                                        onPressed: () {
+                                          Navigator.pushNamed(
+                                            context,
+                                            '/upload-property-photo',
+                                            arguments: p.id,
+                                          );
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        color: Colors.red,
+                                        onPressed: () => _deleteProperty(index),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
         backgroundColor: Colors.indigo,
         onPressed: _addProperty,
         icon: const Icon(Icons.add),
-        label:
-            const Text("Add Property"),
+        label: const Text("Add Property"),
       ),
-
-      bottomNavigationBar:
-          BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBar(
         currentIndex: 1,
-        type:
-            BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.fixed,
         onTap: (index) {
-           if (index == 0) {
-            Navigator.pushNamed(context, AppRoutes.dashboard,
-            );
-            } else if (index == 1) {
-    // Already on Properties page
-       } else if (index == 2) {
-        Navigator.pushReplacementNamed(
-          context,AppRoutes.leads,
-          );
+          if (index == 0) {
+            Navigator.pushNamed(context, '/dashboard');
+          } else if (index == 1) {
+            // Already on Properties
+          } else if (index == 2) {
+            Navigator.pushNamed(context, '/leads');
           } else if (index == 3) {
-            Navigator.pushNamed(
-              context,
-              AppRoutes.profile,
-              );
-              }
-              },
+            Navigator.pushNamed(context, '/profile');
+          }
+        },
         items: const [
           BottomNavigationBarItem(
-            icon:
-                Icon(Icons.dashboard),
+            icon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
@@ -816,13 +728,11 @@ await _saveProperties();
             label: 'Properties',
           ),
           BottomNavigationBarItem(
-            icon:
-                Icon(Icons.people),
+            icon: Icon(Icons.people),
             label: 'Leads',
           ),
           BottomNavigationBarItem(
-            icon:
-                Icon(Icons.person),
+            icon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],

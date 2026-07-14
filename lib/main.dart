@@ -8,7 +8,9 @@ import 'dashboard_screen.dart';
 import 'routes/route_generator.dart';
 import 'theme provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(
     MultiProvider(
       providers: [
@@ -36,7 +38,13 @@ class _MyAppState extends State<MyApp> {
 void initState() {
   super.initState();
 
-  Future.microtask(() {
+  Future.microtask(() async {
+    //load token from storage
+    await Provider.of<AuthService>(context,
+    listen:false,
+    ).loadTokenFromStorage();
+
+    //then check login status
     Provider.of<AuthService>(
       context,
       listen: false,

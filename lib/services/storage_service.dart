@@ -181,7 +181,9 @@ static Future<Map<String, dynamic>> getMap(
 
   static Future<void> saveList(String s, List<Map<String, dynamic>> list) async {}
 
-  Future<Object?> getList(String s) async {}
+  Future<Object?> getList(String s) async {
+    return null;
+  }
 
   static Future<void> saveCurrentUserData(
     Map<String, dynamic> user) async {
