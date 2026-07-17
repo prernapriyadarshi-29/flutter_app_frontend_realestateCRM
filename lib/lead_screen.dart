@@ -259,8 +259,10 @@ class _LeadScreenState extends State<LeadScreen> {
                                 radius: 28,
                                 backgroundColor: Colors.indigo.shade100,
                                 child: Text(
-                                  lead.customerName[0].toUpperCase(),
-                                  style: const TextStyle(
+                                  lead.customerName.isNotEmpty 
+                                  ? lead.customerName[0].toUpperCase() 
+                                  : '?',
+                                    style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.indigo,
@@ -313,10 +315,19 @@ class _LeadScreenState extends State<LeadScreen> {
                                   IconButton(
                                     icon: const Icon(Icons.edit),
                                     color: Colors.blue,
-                                    onPressed: () {
-                                      // TODO: Add Edit Lead Screen
-                                    },
-                                  ),
+                                    onPressed: ()async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddLeadFormScreen(
+          lead: lead,
+        ),
+      ),
+    );
+
+    _loadLeads(); // Refresh the list after returning
+  },
+),
                                   IconButton(
                                     icon: const Icon(Icons.delete),
                                     color: Colors.red,

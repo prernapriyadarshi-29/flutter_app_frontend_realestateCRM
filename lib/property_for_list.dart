@@ -7,7 +7,7 @@ class PropertyForList {
   final String propertyType;
   final String description;
   final bool isAvailable;
-  final String? photos;
+   String? photo;
   final String? address;
 
   PropertyForList({
@@ -20,7 +20,7 @@ class PropertyForList {
     required this.propertyType,
     required this.description,
     required this.isAvailable,
-    this.photos,
+    this.photo,
   });
 
   Map<String, dynamic> toMap() {
@@ -33,23 +33,22 @@ class PropertyForList {
       'propertyType': propertyType,
       'description': description,
       'isAvailable': isAvailable,
-      'photos': photos,
+      'photos': photo,
     };
   }
 
-  factory PropertyForList.fromMap(
-      Map<String, dynamic> map) {
-    return PropertyForList(
-      id: map['id']??0,
-      title: map['title']??'',
-      price: map['price']??0,
-      city: map['city']??'',
-      address: map['address'],
-      bedrooms: map['bedrooms']??0,
-      propertyType: map['propertyType']??'',
-      description: map['description']??'',
-      isAvailable: map['isAvailable']??false,
-      photos: map['photos'],
-    );
-  }
+  factory PropertyForList.fromMap(Map<String, dynamic> map) {
+  return PropertyForList(
+    id: map['id'] ?? 0,
+    title: map['title'] ?? '',
+    price: int.tryParse(map['price']?.toString() ?? '0') ?? 0,  // FIX THIS LINE
+    city: map['city'] ?? '',
+    address: map['address'],
+    bedrooms: map['bedrooms'] ?? 0,
+    propertyType: map['type'] ?? '',
+    description: map['description'] ?? '',
+    isAvailable: (map['status'] ?? 0) == 1,
+    photo: map['photo_url'],
+  );
+}
 }

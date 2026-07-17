@@ -20,6 +20,9 @@ class LeadForList {
   });
 
   factory LeadForList.fromMap(Map<String, dynamic> map) {
+    // Safely get customer data
+    final customer = map['customer'] as Map<String, dynamic>? ?? {};
+    
     return LeadForList(
       id: map['id'] ?? 0,
       customerId: map['customer_id'] ?? 0,
@@ -27,8 +30,8 @@ class LeadForList {
       status: map['status'] ?? 'New',
       note: map['note'],
       followUpDate: map['follow_up_date'],
-      customerName: map['customer_name'] ?? '',
-      customerPhone: map['customer_phone'] ?? '',
+      customerName: map['customer']['name'] ?? 'Unknown',
+      customerPhone: map['customer']['phone'] ?? 'N/A',
     );
   }
 }

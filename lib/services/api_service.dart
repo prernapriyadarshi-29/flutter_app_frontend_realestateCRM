@@ -116,6 +116,21 @@ class ApiService {
     }
   }
 
+  // Validate Token
+static Future<bool> validateToken() async {
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/me'),
+      headers: _getHeaders(),
+    );
+
+    return response.statusCode == 200;
+  } catch (e) {
+    print('Validate Token Error: $e');
+    return false;
+  }
+}
+
   // Logout
   static Future<Map<String, dynamic>> logout() async {
     try {
@@ -208,8 +223,9 @@ class ApiService {
     final streamedResponse = await request.send();
 
     final response = await http.Response.fromStream(
-      streamedResponse,
-    );
+      streamedResponse,);
+    print("STATUS CODE: ${response.statusCode}");
+print("BODY: ${response.body}");
 
     return _handleResponse(response);
   } catch (e) {
@@ -259,7 +275,7 @@ static Future<Map<String, dynamic>> index({
     required String address,
     required int bedrooms,
     required String type,
-    required String photo,
+     String? photo,
     required int status,
   }) async {
     try {
@@ -273,7 +289,7 @@ static Future<Map<String, dynamic>> index({
           'address': address,
           'bedrooms': bedrooms,
           'type': type,
-          'photo': photo,
+          'photo': photo ?? '',
           'status': status,
         }),
       );
@@ -295,7 +311,7 @@ static Future<Map<String, dynamic>> index({
     required String address,
     required int bedrooms,
     required String type,
-    required String photo,
+    String? photo,
     required int status,
   }) async {
     try {
@@ -309,7 +325,7 @@ static Future<Map<String, dynamic>> index({
           'address': address,
           'bedrooms': bedrooms,
           'type': type,
-          'photo': photo,
+          'photo': photo ?? '',
           'status': status,
         }),
       );
@@ -478,5 +494,80 @@ static Future<Map<String, dynamic>> getDashboard() async {
 static Future<String> _getToken() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getString('auth_token') ?? '';
+}
+
+static Future<Map<String, dynamic>> addCustomer({
+  required String name,
+  required String phone,
+}) async {
+  try {
+    final token = await _getToken();
+    
+    if (token.isEmpty) {
+      throw Exception('No auth token found');
+    }
+    
+    // Generate a unique email based on timestamp
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final email = 'customer_$timestamp@crm.local';
+    
+    final response = await http.post(
+      Uri.parse('$baseUrl/customers'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'city': 'Mumbai', // Default city
+        'status': 'Active',
+      }),
+    );
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['message'] ?? 'Failed to create customer');
+    }
+  } catch (e) {
+    throw Exception('Error: $e');
+  }
+}
+static Future<Map<String, dynamic>> addProperty({
+  required String title,
+  required int price,
+  required String city,
+  required int bedrooms,
+  required String type,
+  String? address,
+  int? status,
+}) async {
+  try {
+    final token = await _getToken();
+    
+    final response = await http.post(
+      Uri.parse('$baseUrl/properties'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'title': title,
+        'price': price,
+        'city': city,
+        'bedrooms': bedrooms,
+        'property_type': type,
+        'address': address ?? '',
+        'status': status ?? 1,
+      }),
+    );
+
+    return jsonDecode(response.body);
+  } catch (e) {
+    throw Exception('Error: $e');
+  }
 }
 }

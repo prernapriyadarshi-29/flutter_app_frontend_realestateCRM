@@ -89,13 +89,36 @@ class AuthService extends ChangeNotifier {
   // ---------------- AUTO LOGIN ----------------
 
   Future<void> checkLogin() async {
-    final user =
-        await StorageService.getCurrentUser();
+  try {
+    final prefs = await SharedPreferences.getInstance();
 
-    _isLoggedIn = user != null;
+    final token = prefs.getString('auth_token');
+
+    if (token == null || token.isEmpty) {
+      _isLoggedIn = false;
+      notifyListeners();
+      return;
+    }
+
+    ApiService.setToken(token);
+
+    final isValid = await ApiService.validateToken();
+
+    if (isValid) {
+      _isLoggedIn = true;
+    } else {
+      await prefs.remove('auth_token');
+      ApiService.setToken('');
+      _isLoggedIn = false;
+    }
 
     notifyListeners();
+  } catch (e) {
+    print("Auto Login Error: $e");
+    _isLoggedIn = false;
+    notifyListeners();
   }
+}
 
   // ---------------- LOGOUT ----------------
 
@@ -123,11 +146,20 @@ Future<void> loadTokenFromStorage() async {
   try {
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('auth_token');
-    if (token != null) {
+    if (token != null && token.isNotEmpty) {
       ApiService.setToken(token);
+      _isLoggedIn = true;
+    } else {
+      _isLoggedIn = false;
     }
+
+    _splashComplete = true;
+    notifyListeners();
   } catch (e) {
     print('Load token error: $e');
+    _isLoggedIn = false;
+    _splashComplete = true;
+    notifyListeners();
   }
 }
 }

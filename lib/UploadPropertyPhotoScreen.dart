@@ -37,7 +37,7 @@ class _UploadPropertyPhotoScreenState extends State<UploadPropertyPhotoScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Photo uploaded successfully!')),
         );
-        Navigator.pop(context);
+         Navigator.pop(context, true); 
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response['message'] ?? 'Upload failed')),

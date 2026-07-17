@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'lead_for_list.dart';
 
 class AddLeadFormScreen extends StatefulWidget {
-  const AddLeadFormScreen({super.key});
+  final LeadForList? lead;
+
+  const AddLeadFormScreen({
+    super.key,
+    this.lead,
+  });
+
+  bool get isEditing => lead != null;
 
   @override
   State<AddLeadFormScreen> createState() => _AddLeadFormScreenState();
@@ -10,13 +18,30 @@ class AddLeadFormScreen extends StatefulWidget {
 
 class _AddLeadFormScreenState extends State<AddLeadFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _customerIdController = TextEditingController();
+  final TextEditingController _customerNameController = TextEditingController();
+final TextEditingController _customerPhoneController = TextEditingController();
   final TextEditingController _propertyIdController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
   final TextEditingController _followUpDateController = TextEditingController();
 
   String _selectedStatus = 'New';
   final List<String> statuses = ['New', 'Contacted', 'Visited', 'Closed'];
+
+  @override
+void initState() {
+  super.initState();
+
+  if (widget.isEditing) {
+    _customerNameController.text = widget.lead!.customerName;
+    _customerPhoneController.text = widget.lead!.customerPhone;
+    _propertyIdController.text = widget.lead!.propertyId.toString();
+    _noteController.text = widget.lead!.note ?? '';
+    _followUpDateController.text =
+        widget.lead!.followUpDate ?? '';
+
+    _selectedStatus = widget.lead!.status;
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -33,26 +58,37 @@ class _AddLeadFormScreenState extends State<AddLeadFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Customer ID
-              TextFormField(
-                controller: _customerIdController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Customer ID',
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter customer ID',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter customer ID';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+              // Customer Name
+TextFormField(
+  controller: _customerNameController,
+  decoration: const InputDecoration(
+    labelText: 'Customer Name',
+    border: OutlineInputBorder(),
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter customer name';
+    }
+    return null;
+  },
+),
+const SizedBox(height: 16),
+
+// Customer Phone
+TextFormField(
+  controller: _customerPhoneController,
+  decoration: const InputDecoration(
+    labelText: 'Customer Phone',
+    border: OutlineInputBorder(),
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter customer phone';
+    }
+    return null;
+  },
+),
+const SizedBox(height: 16),
 
               // Property ID
               TextFormField(
@@ -64,14 +100,13 @@ class _AddLeadFormScreenState extends State<AddLeadFormScreen> {
                   hintText: 'Enter property ID',
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter property ID';
-                  }
+                  if (value != null && value.isNotEmpty) {
                   if (int.tryParse(value) == null) {
                     return 'Please enter a valid number';
                   }
+                  }
                   return null;
-                },
+                }
               ),
               const SizedBox(height: 16),
 
@@ -143,36 +178,54 @@ class _AddLeadFormScreenState extends State<AddLeadFormScreen> {
   }
 
   Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate()) {
+  if (!_formKey.currentState!.validate()) {
+    return;
+  }
+
+  try {
+    // Step 1: Create customer first
+    final customerResponse = await ApiService.addCustomer(
+      name: _customerNameController.text,
+      phone: _customerPhoneController.text,
+    );
+
+    if (customerResponse['status'] != true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create customer')),
+      );
       return;
     }
 
-    try {
-      final customerId = int.parse(_customerIdController.text);
-      final propertyId = int.parse(_propertyIdController.text);
+    // Step 2: Get customer ID from response
+    final customerId = customerResponse['data']['id'];
+    
+    // Step 3: Create lead with customer ID
+    final propertyId = _propertyIdController.text.isEmpty 
+      ? 1
+      : int.parse(_propertyIdController.text);
 
-      final response = await ApiService.createLead(
-        customerId: customerId,
-        propertyId: propertyId,
-        status: _selectedStatus,
-        note: _noteController.text.isEmpty ? null : _noteController.text,
-        followUpDate: _followUpDateController.text.isEmpty ? null : _followUpDateController.text,
-      );
+    final response = await ApiService.createLead(
+      customerId: customerId,
+      propertyId: propertyId,
+      status: _selectedStatus,
+      note: _noteController.text.isEmpty ? null : _noteController.text,
+      followUpDate: _followUpDateController.text.isEmpty ? null : _followUpDateController.text,
+    );
 
-      if (response['status'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lead added successfully!')),
-        );
-        Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response['message'] ?? 'Failed to add lead')),
-        );
-      }
-    } catch (e) {
+    if (response['status'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        const SnackBar(content: Text('Lead added successfully!')),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response['message'] ?? 'Failed to add lead')),
       );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
   }
+}
 }

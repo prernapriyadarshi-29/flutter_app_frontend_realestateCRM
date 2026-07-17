@@ -83,10 +83,33 @@ Future<void> _pickImage() async {
     imageQuality: 80,
   );
 
-  if (image != null) {
-    setState(() {
-      _selectedImage = File(image.path);
-    });
+  if (image == null) return;
+
+  setState(() {
+    _selectedImage = File(image.path);
+  });
+
+  if (widget.property != null) {
+    final response =
+        await ApiService.uploadPropertyPhoto(
+      widget.property!.id,
+      image.path,
+    );
+
+    if (response['status'] == true) {
+      setState(() {
+        widget.property!.photo =
+            response['photo_url'];
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Photo uploaded successfully',
+          ),
+        ),
+      );
+    }
   }
 }
 
@@ -115,22 +138,46 @@ Future<void> _pickImage() async {
     }
   }
 
-void _saveProperty() {
-  FocusScope.of(context).unfocus();
-
-  if (_formKey.currentState!.validate()) {
-    final property = PropertyForList(
-      id : widget.property?.id ?? 0,
-      title: _titleController.text.trim(),
-      price: int.parse(_priceController.text.replaceAll(',', '').trim()),
-      city: _cityController.text.trim(),
-      bedrooms: int.parse(_bedroomsController.text.trim()),
-      propertyType: _selectedPropertyType ?? 'Apartment',
-      description: _descriptionController.text.trim(),
-      isAvailable: _isAvailable,
+Future<void> _saveProperty() async {
+  print('🔵 Save clicked!');
+  
+  try {
+    print('🟢 Preparing data...');
+    
+    final title = _titleController.text.trim();
+    final priceText = _priceController.text.replaceAll(',', '').trim();
+    final price = int.parse(priceText);
+    final city = _cityController.text.trim();
+    final bedrooms = int.parse(_bedroomsController.text.trim());
+    final type = _selectedPropertyType ?? 'Apartment';
+    
+    print('📝 Title: $title, Price: $price, City: $city, Bedrooms: $bedrooms, Type: $type');
+    
+    print('🟡 Calling API...');
+    final response = await ApiService.addProperty(
+      title: title,
+      price: price,
+      city: city,
+      bedrooms: bedrooms,
+      type: type,
     );
+    
+    print('🟠 API Response: $response');
 
-    Navigator.of(context).pop(property);
+    if (response['status'] == true) {
+      print('✅ Success!');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Property saved!')),
+      );
+      Navigator.pop(context, true);
+    } else {
+      print('❌ Failed: ${response['message']}');
+    }
+  } catch (e) {
+    print('🔴 ERROR: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
   }
 }
   @override
@@ -319,7 +366,7 @@ void _saveProperty() {
                 ),
                 items: const [
                   DropdownMenuItem(
-                    value: 'Aparatment',
+                    value: 'Apartment',
                     child: Text('Apartment'),
                   ),
                   DropdownMenuItem(
@@ -379,16 +426,37 @@ Align(
 
 const SizedBox(height: 10),
 
-if (_selectedImage != null)
-  ClipRRect(
-    borderRadius: BorderRadius.circular(8),
-    child: Image.file(
-      _selectedImage!,
-      height: 180,
-      width: double.infinity,
-      fit: BoxFit.cover,
-    ),
+Container(
+  height: 220,
+  width: double.infinity,
+  decoration: BoxDecoration(
+    border: Border.all(color: Colors.grey.shade400),
+    borderRadius: BorderRadius.circular(10),
   ),
+  child: _selectedImage != null
+      ? ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.file(
+            _selectedImage!,
+            fit: BoxFit.cover,
+          ),
+        )
+      : widget.property?.photo != null
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                widget.property!.photo!,
+                fit: BoxFit.cover,
+              ),
+            )
+          : const Center(
+              child: Icon(
+                Icons.image,
+                size: 80,
+                color: Colors.grey,
+              ),
+            ),
+),
 
 const SizedBox(height: 10),
 

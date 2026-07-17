@@ -306,6 +306,7 @@ import '../property_for_list.dart';
 import '../property_add_form_screen.dart';
 import '../services/api_service.dart';
 import '../auth_service.dart';
+import '../UploadPropertyPhotoScreen.dart';
 
 class PropertyListScreen extends StatefulWidget {
   const PropertyListScreen({super.key});
@@ -378,7 +379,7 @@ Future<void> _loadPropertiesFromAPI() async {
               propertyType: map['type'] ?? '',
               description: map['description'] ?? '',
               isAvailable: (map['status'] ?? 0) == 1,
-              photos: map['photos'],
+              photo: map['photo_url'],
             );
             properties.add(property);
           }
@@ -394,11 +395,13 @@ Future<void> _loadPropertiesFromAPI() async {
 
   Future<void> _addProperty() async {
     final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const PropertyAddFormScreen(),
-      ),
-    );
+  context,
+  MaterialPageRoute(builder: (_) => const PropertyAddFormScreen()),
+).then((refresh) {
+  if (refresh == true) {
+    _loadPropertiesFromAPI();  // Reload list
+  }
+});
 
     if (result != null && result is PropertyForList) {
       final response = await ApiService.store(
@@ -408,7 +411,7 @@ Future<void> _loadPropertiesFromAPI() async {
         address: result.address ?? '',
         bedrooms: result.bedrooms,
         type: result.propertyType,
-        photo: result.photos ?? '',
+        photo: result.photo ,
         status: result.isAvailable ? 1 : 0,
       );
 
@@ -440,7 +443,7 @@ Future<void> _loadPropertiesFromAPI() async {
         address: result.address ?? '',
         bedrooms: result.bedrooms,
         type: result.propertyType,
-        photo: result.photos ?? '',
+        photo: result.photo ,
         status: result.isAvailable ? 1 : 0,
       );
 
@@ -623,14 +626,19 @@ Future<void> _loadPropertiesFromAPI() async {
                               Row(
                                 children: [
                                   CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: Colors.indigo.shade100,
-                                    child: const Icon(
+                                    radius: 35,
+                                    backgroundColor: Colors.grey.shade200,
+                                    backgroundImage: p.photo != null && p.photo!.isNotEmpty
+                                    ? NetworkImage(p.photo!)
+                                    : null,
+                                    child: (p.photo == null || p.photo!.isEmpty)
+                                    ? const Icon(
                                       Icons.home,
                                       color: Colors.indigo,
                                       size: 30,
-                                    ),
-                                  ),
+                                      )
+                                      : null,
+                                      ),
                                   const SizedBox(width: 15),
                                   Expanded(
                                     child: Column(
@@ -670,16 +678,22 @@ Future<void> _loadPropertiesFromAPI() async {
                                         onPressed: () => _editProperty(index),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.photo_camera),
-                                        color: Colors.green,
-                                        onPressed: () {
-                                          Navigator.pushNamed(
-                                            context,
-                                            '/upload-property-photo',
-                                            arguments: p.id,
-                                          );
-                                        },
-                                      ),
+  icon: const Icon(Icons.photo_camera),
+  color: Colors.green,
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UploadPropertyPhotoScreen(propertyId: p.id),
+      ),
+    ).then((refresh) {
+      if (refresh == true) {
+        _loadPropertiesFromAPI();
+        };
+      
+    });
+  },
+),
                                       IconButton(
                                         icon: const Icon(Icons.delete),
                                         color: Colors.red,
@@ -739,5 +753,21 @@ Future<void> _loadPropertiesFromAPI() async {
       ),
     );
   }
+  String _cleanPhotoUrl(String photo) {
+  // If already starts with http, return as is
+  if (photo.startsWith('http')) {
+    // Remove duplicate base URL if exists
+    if (photo.contains('http://192.168.1.20:8000/storage/http')) {
+      return photo.replaceFirst(
+        'http://192.168.1.20:8000/storage/http',
+        'http',
+      );
+    }
+    return photo;
+  }
+  
+  // If not, add base URL
+  return 'http://192.168.1.20:8000/storage/$photo';
+}
 }
 
