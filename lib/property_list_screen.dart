@@ -324,7 +324,7 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
   @override
 void initState() {
   super.initState();
-  _loadPropertiesFromAPI();
+  _loadProperties();
 }
 
 Future<void> _loadPropertiesFromAPI() async {
@@ -623,7 +623,7 @@ Future<void> _loadPropertiesFromAPI() async {
                                     radius: 35,
                                     backgroundColor: Colors.grey.shade200,
                                     backgroundImage: p.photo != null && p.photo!.isNotEmpty
-                                    ? NetworkImage(p.photo!)
+                                    ? NetworkImage(_cleanPhotoUrl(p.photo!))
                                     : null,
                                     child: (p.photo == null || p.photo!.isEmpty)
                                     ? const Icon(
@@ -720,6 +720,7 @@ Future<void> _loadPropertiesFromAPI() async {
           if (index == 0) {
             Navigator.pushNamed(context, '/dashboard');
           } else if (index == 1) {
+            _loadPropertiesFromAPI();
             // Already on Properties
           } else if (index == 2) {
             Navigator.pushNamed(context, '/leads');
@@ -763,4 +764,3 @@ Future<void> _loadPropertiesFromAPI() async {
   return 'http://192.168.1.20:8000/storage/properties/$photo';
 }
 }
-
