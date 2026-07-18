@@ -368,6 +368,8 @@ Future<void> _loadPropertiesFromAPI() async {
         final dataContainer = response['data'] as Map<String, dynamic>;
         final propertiesList = dataContainer['data'] as List<dynamic>? ?? [];
 
+        print("First property price: ${propertiesList.isNotEmpty ? propertiesList[0]['price'] : 'EMPTY'}");
+
         setState(() {
           properties.clear();
           for (var item in propertiesList) {
@@ -375,7 +377,7 @@ Future<void> _loadPropertiesFromAPI() async {
             final property = PropertyForList(
               id: map['id'] ?? 0,
               title: map['title'] ?? '',
-              price: int.tryParse(map['price']?.toString() ?? '0') ?? 0,
+              price: (double.tryParse(map['price'].toString()) ?? 0).toInt(),
               city: map['city'] ?? '',
               address: map['address'],
               bedrooms: map['bedrooms'] ?? 0,
@@ -442,7 +444,7 @@ Future<void> _loadPropertiesFromAPI() async {
   if (result == true) {
     await _loadProperties(search: _searchQuery);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Property updated successfully!')),
+     const SnackBar(content: Text('Property updated successfully!')),
     );
   }
 }
@@ -654,7 +656,7 @@ Future<void> _loadPropertiesFromAPI() async {
                                         ),
                                         const SizedBox(height: 5),
                                         Text(
-                                          '₹${p.price}',
+                                           '₹${p.price.toStringAsFixed(0)}',  // ← ADD toStringAsFixed(0)
                                           style: const TextStyle(
                                             color: Colors.green,
                                             fontWeight: FontWeight.bold,

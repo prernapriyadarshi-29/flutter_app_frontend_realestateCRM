@@ -41,7 +41,7 @@ class PropertyForList {
   return PropertyForList(
     id: map['id'] ?? 0,
     title: map['title'] ?? '',
-    price: int.tryParse(map['price']?.toString() ?? '0') ?? 0,  // FIX THIS LINE
+    price: double.tryParse(map['price'].toString())?.toInt() ?? 0,  // FIX THIS LINE
     city: map['city'] ?? '',
     address: map['address'],
     bedrooms: map['bedrooms'] ?? 0,
