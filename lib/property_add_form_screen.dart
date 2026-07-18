@@ -154,25 +154,51 @@ Future<void> _saveProperty() async {
     print('📝 Title: $title, Price: $price, City: $city, Bedrooms: $bedrooms, Type: $type');
     
     print('🟡 Calling API...');
-    final response = await ApiService.addProperty(
-      title: title,
-      price: price,
-      city: city,
-      bedrooms: bedrooms,
-      type: type,
-    );
-    
-    print('🟠 API Response: $response');
 
-    if (response['status'] == true) {
-      print('✅ Success!');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Property saved!')),
-      );
-      Navigator.pop(context, true);
-    } else {
-      print('❌ Failed: ${response['message']}');
-    }
+Map<String, dynamic> response;
+
+if (widget.property == null) {
+  // Add new property
+  response = await ApiService.addProperty(
+    title: title,
+    price: price,
+    city: city,
+    bedrooms: bedrooms,
+    type: type,
+  );
+} else {
+  // Update existing property
+  response = await ApiService.update(
+    widget.property!.id,
+    title: title,
+    price: price,
+    city: city,
+    address: widget.property!.address ?? '',
+    bedrooms: bedrooms,
+    type: type,
+    photo: widget.property!.photo,
+    status: widget.property!.isAvailable ? 1 : 0,
+  );
+}
+
+print('🟠 API Response: $response');
+
+if (response['status'] == true) {
+  print('✅ Success!');
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        widget.property == null
+            ? '✅ Property added!'
+            : '✅ Property updated!',
+      ),
+    ),
+  );
+
+  Navigator.pop(context, true);
+} else {
+  print('❌ Failed: ${response['message']}');
+}
   } catch (e) {
     print('🔴 ERROR: $e');
     ScaffoldMessenger.of(context).showSnackBar(

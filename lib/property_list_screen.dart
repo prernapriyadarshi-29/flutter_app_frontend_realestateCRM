@@ -328,8 +328,11 @@ void initState() {
 }
 
 Future<void> _loadPropertiesFromAPI() async {
+  print("========== _loadPropertiesFromAPI CALLED ==========");//.....check
   try {
     final data = await ApiService.getProperties();
+    print("Received ${data.length} properties");//.....check
+    print("First property title: ${data.isNotEmpty ? data[0].title : 'EMPTY'}");//....check
     setState(() {
   properties.clear();
   properties.addAll(data);
@@ -379,8 +382,12 @@ Future<void> _loadPropertiesFromAPI() async {
               propertyType: map['type'] ?? '',
               description: map['description'] ?? '',
               isAvailable: (map['status'] ?? 0) == 1,
-              photo: map['photo_url'],
+              photo: map['photo']==null
+              ?null
+              :_cleanPhotoUrl(map['photo']),
             );
+
+            print(property.photo);// picture FINALLY VISIBLE YAYAYAYAYAY
             properties.add(property);
           }
         });
@@ -396,12 +403,10 @@ Future<void> _loadPropertiesFromAPI() async {
   Future<void> _addProperty() async {
     final result = await Navigator.push(
   context,
-  MaterialPageRoute(builder: (_) => const PropertyAddFormScreen()),
-).then((refresh) {
-  if (refresh == true) {
-    _loadPropertiesFromAPI();  // Reload list
-  }
-});
+  MaterialPageRoute(
+    builder: (_) => const PropertyAddFormScreen(),
+  ),
+  );
 
     if (result != null && result is PropertyForList) {
       final response = await ApiService.store(
@@ -416,7 +421,7 @@ Future<void> _loadPropertiesFromAPI() async {
       );
 
       if (response['status'] == true) {
-        _loadProperties();
+        await _loadProperties(search: _searchQuery);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Property added successfully!')),
         );
@@ -425,36 +430,22 @@ Future<void> _loadPropertiesFromAPI() async {
   }
 
   Future<void> _editProperty(int index) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PropertyAddFormScreen(
-          property: properties[index],
-        ),
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => PropertyAddFormScreen(
+        property: properties[index],
       ),
+    ),
+  );
+
+  if (result == true) {
+    await _loadProperties(search: _searchQuery);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Property updated successfully!')),
     );
-
-    if (result != null && result is PropertyForList) {
-      final response = await ApiService.update(
-        properties[index].id,
-        title: result.title,
-        price: result.price,
-        city: result.city,
-        address: result.address ?? '',
-        bedrooms: result.bedrooms,
-        type: result.propertyType,
-        photo: result.photo ,
-        status: result.isAvailable ? 1 : 0,
-      );
-
-      if (response['status'] == true) {
-        _loadProperties();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Property updated successfully!')),
-        );
-      }
-    }
   }
+}
 
   Future<void> _deleteProperty(int index) async {
     final shouldDelete = await showDialog<bool>(
@@ -479,7 +470,7 @@ Future<void> _loadPropertiesFromAPI() async {
       final response = await ApiService.destroy(properties[index].id);
 
       if (response['status'] == true) {
-        _loadProperties();
+        await _loadProperties(search: _searchQuery);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Property deleted successfully!')),
         );
@@ -590,6 +581,8 @@ Future<void> _loadPropertiesFromAPI() async {
           ),
           // PROPERTIES LIST
           Expanded(
+             child: RefreshIndicator(  // ← ADD THIS LINE
+    onRefresh: () => _loadProperties(search: _searchQuery),  // ← ADD THIS LINE
             child: properties.isEmpty
                 ? Center(
                     child: Column(
@@ -613,6 +606,7 @@ Future<void> _loadPropertiesFromAPI() async {
                     ),
                   )
                 : ListView.builder(
+                  key: ValueKey(properties.length),  
                     padding: const EdgeInsets.all(10),
                     itemCount: properties.length,
                     itemBuilder: (context, index) {
@@ -710,6 +704,7 @@ Future<void> _loadPropertiesFromAPI() async {
                     },
                   ),
           ),
+          )
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

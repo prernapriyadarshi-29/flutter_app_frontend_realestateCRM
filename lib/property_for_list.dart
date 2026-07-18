@@ -48,7 +48,9 @@ class PropertyForList {
     propertyType: map['type'] ?? '',
     description: map['description'] ?? '',
     isAvailable: (map['status'] ?? 0) == 1,
-    photo: map['photo_url'],
+    photo: map['photo_url']==null
+    ?null
+    :'http://192.168.1.20:8000/storage/${map['photo']}',
   );
 }
 }

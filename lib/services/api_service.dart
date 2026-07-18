@@ -288,7 +288,7 @@ static Future<Map<String, dynamic>> index({
           'city': city,
           'address': address,
           'bedrooms': bedrooms,
-          'type': type,
+          'property_type': type,
           'photo': photo ?? '',
           'status': status,
         }),
@@ -324,7 +324,7 @@ static Future<Map<String, dynamic>> index({
           'city': city,
           'address': address,
           'bedrooms': bedrooms,
-          'type': type,
+          'property_type': type,
           'photo': photo ?? '',
           'status': status,
         }),
@@ -475,11 +475,14 @@ static Future<Map<String, dynamic>> getDashboard() async {
     final token = await _getToken(); // Get saved token
     
     final response = await http.get(
+      
       Uri.parse('$baseUrl/properties?page=1&per_page=100'),
       headers: {
         'Authorization': 'Bearer $token',
       },
     );
+    print("===== GET PROPERTIES =====");//....................check
+print(response.body);//..........checkcheck
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
       final List<dynamic> data = jsonData['data']['data'];
