@@ -748,21 +748,19 @@ Future<void> _loadPropertiesFromAPI() async {
       ),
     );
   }
-  String _cleanPhotoUrl(String photo) {
+ String _cleanPhotoUrl(String photo) {
   // If already starts with http, return as is
   if (photo.startsWith('http')) {
-    // Remove duplicate base URL if exists
-    if (photo.contains('http://192.168.1.20:8000/storage/http')) {
-      return photo.replaceFirst(
-        'http://192.168.1.20:8000/storage/http',
-        'http',
-      );
-    }
     return photo;
   }
   
-  // If not, add base URL
-  return 'http://192.168.1.20:8000/storage/$photo';
+  // If starts with 'properties/', just add the base storage URL
+  if (photo.startsWith('properties/')) {
+    return 'http://192.168.1.20:8000/storage/$photo';
+  }
+  
+  // Otherwise add both storage and properties
+  return 'http://192.168.1.20:8000/storage/properties/$photo';
 }
 }
 
